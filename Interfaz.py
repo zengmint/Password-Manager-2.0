@@ -4,7 +4,7 @@ from tkinter import messagebox, simpledialog
 
 # Database initialization
 def initialize_database():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("initdb.db")
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS cuentas (
@@ -19,7 +19,7 @@ def initialize_database():
 # Add data to the database
 def add_data(cuenta, usuario, contrase\u00f1a):
     try:
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect("initdb.db")
         cursor = conn.cursor()
         cursor.execute("INSERT INTO cuentas (cuenta, usuario, contrase\u00f1a) VALUES (?, ?, ?)", (cuenta, usuario, contrase\u00f1a))
         conn.commit()
@@ -30,7 +30,7 @@ def add_data(cuenta, usuario, contrase\u00f1a):
 
 # Fetch data for a specific account
 def fetch_data(cuenta):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("initdb.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM cuentas WHERE cuenta = ?", (cuenta,))
     result = cursor.fetchone()
@@ -39,7 +39,7 @@ def fetch_data(cuenta):
 
 # Fetch all account names
 def fetch_all_accounts():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("initdb.db")
     cursor = conn.cursor()
     cursor.execute("SELECT cuenta FROM cuentas")
     results = cursor.fetchall()
@@ -48,7 +48,7 @@ def fetch_all_accounts():
 
 # Update data for a specific account
 def update_data(cuenta, usuario, contrase\u00f1a):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("initdb.db")
     cursor = conn.cursor()
     cursor.execute("UPDATE cuentas SET usuario = ?, contrase\u00f1a = ? WHERE cuenta = ?", (usuario, contrase\u00f1a, cuenta))
     conn.commit()
