@@ -10,18 +10,18 @@ def initialize_database():
         CREATE TABLE IF NOT EXISTS cuentas (
             cuenta VARCHAR(30) PRIMARY KEY,
             usuario VARCHAR(30),
-            contrase\u00f1a VARCHAR(30)
+            contraseña VARCHAR(30)
         )
     ''')
     conn.commit()
     conn.close()
 
 # Add data to the database
-def add_data(cuenta, usuario, contrase\u00f1a):
+def add_data(cuenta, usuario, contraseña):
     try:
         conn = sqlite3.connect("initdb.db")
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO cuentas (cuenta, usuario, contrase\u00f1a) VALUES (?, ?, ?)", (cuenta, usuario, contrase\u00f1a))
+        cursor.execute("INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)", (cuenta, usuario, contraseña))
         conn.commit()
         conn.close()
         messagebox.showinfo("Success", "Data added successfully!")
@@ -47,10 +47,10 @@ def fetch_all_accounts():
     return [row[0] for row in results]
 
 # Update data for a specific account
-def update_data(cuenta, usuario, contrase\u00f1a):
+def update_data(cuenta, usuario, contraseña):
     conn = sqlite3.connect("initdb.db")
     cursor = conn.cursor()
-    cursor.execute("UPDATE cuentas SET usuario = ?, contrase\u00f1a = ? WHERE cuenta = ?", (usuario, contrase\u00f1a, cuenta))
+    cursor.execute("UPDATE cuentas SET usuario = ?, contraseña = ? WHERE cuenta = ?", (usuario, contraseña, cuenta))
     conn.commit()
     conn.close()
     messagebox.showinfo("Success", "Data updated successfully!")
@@ -78,16 +78,16 @@ def main_menu():
 
 def add_form():
     def toggle_password():
-        if contrase\u00f1a_entry.cget('show') == '*':
-            contrase\u00f1a_entry.config(show='')
+        if contraseña_entry.cget('show') == '*':
+            contraseña_entry.config(show='')
         else:
-            contrase\u00f1a_entry.config(show='*')
+            contraseña_entry.config(show='*')
 
     def submit():
         cuenta = cuenta_entry.get()
         usuario = usuario_entry.get()
-        contrase\u00f1a = contrase\u00f1a_entry.get()
-        add_data(cuenta, usuario, contrase\u00f1a)
+        contraseña = contraseña_entry.get()
+        add_data(cuenta, usuario, contraseña)
         add.destroy()
         main_menu()
 
@@ -103,8 +103,8 @@ def add_form():
     usuario_entry.pack()
 
     tk.Label(add, text="Password:").pack()
-    contrase\u00f1a_entry = tk.Entry(add, show="*")
-    contrase\u00f1a_entry.pack()
+    contraseña_entry = tk.Entry(add, show="*")
+    contraseña_entry.pack()
 
     tk.Button(add, text="Toggle Password", command=toggle_password).pack(pady=5)
     tk.Button(add, text="Submit", command=submit).pack(pady=10)
@@ -117,20 +117,20 @@ def fetch_form():
         data = fetch_data(cuenta)
         if data:
             usuario_entry.config(state=tk.NORMAL)
-            contrase\u00f1a_entry.config(state=tk.NORMAL)
+            contraseña_entry.config(state=tk.NORMAL)
             usuario_entry.delete(0, tk.END)
-            contrase\u00f1a_entry.delete(0, tk.END)
+            contraseña_entry.delete(0, tk.END)
             usuario_entry.insert(0, data[1])
-            contrase\u00f1a_entry.insert(0, data[2])
+            contraseña_entry.insert(0, data[2])
             usuario_entry.config(state=tk.DISABLED)
-            contrase\u00f1a_entry.config(state=tk.DISABLED)
+            contraseña_entry.config(state=tk.DISABLED)
         else:
             messagebox.showerror("Error", "Account not found!")
 
     def toggle_password():
         auth_password = simpledialog.askstring("Authentication", "Enter password to view:", show='*')
         if auth_password == "ver":
-            contrase\u00f1a_entry.config(show='')
+            contraseña_entry.config(show='')
         else:
             messagebox.showerror("Error", "Incorrect password!")
 
@@ -152,8 +152,8 @@ def fetch_form():
     usuario_entry.pack()
 
     tk.Label(fetch, text="Password:").pack()
-    contrase\u00f1a_entry = tk.Entry(fetch, show="*", state=tk.DISABLED)
-    contrase\u00f1a_entry.pack()
+    contraseña_entry = tk.Entry(fetch, show="*", state=tk.DISABLED)
+    contraseña_entry.pack()
 
     tk.Button(fetch, text="Show", command=toggle_password).pack(pady=5)
     tk.Button(fetch, text="Back", command=lambda: [fetch.destroy(), main_menu()]).pack(pady=5)
@@ -166,9 +166,9 @@ def update_form():
         data = fetch_data(cuenta)
         if data:
             usuario_entry.delete(0, tk.END)
-            contrase\u00f1a_entry.delete(0, tk.END)
+            contraseña_entry.delete(0, tk.END)
             usuario_entry.insert(0, data[1])
-            contrase\u00f1a_entry.insert(0, data[2])
+            contraseña_entry.insert(0, data[2])
         else:
             messagebox.showerror("Error", "Account not found!")
 
@@ -177,8 +177,8 @@ def update_form():
         if auth_password == "cambio":
             cuenta = cuenta_entry.get()
             usuario = usuario_entry.get()
-            contrase\u00f1a = contrase\u00f1a_entry.get()
-            update_data(cuenta, usuario, contrase\u00f1a)
+            contraseña = contraseña_entry.get()
+            update_data(cuenta, usuario, contraseña)
             update.destroy()
             main_menu()
         else:
@@ -198,8 +198,8 @@ def update_form():
     usuario_entry.pack()
 
     tk.Label(update, text="New Password:").pack()
-    contrase\u00f1a_entry = tk.Entry(update, show="*")
-    contrase\u00f1a_entry.pack()
+    contraseña_entry = tk.Entry(update, show="*")
+    contraseña_entry.pack()
 
     tk.Button(update, text="Modify", command=modify).pack(pady=10)
 
