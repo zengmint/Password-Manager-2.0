@@ -148,7 +148,7 @@ def consult_data_form():
     username_entry.pack(pady=5)
 
     tk.Label(form, text="Password").pack()
-    password_entry = tk.Entry(form, textvariable=password_var, state="disabled")
+    password_entry = tk.Entry(form, textvariable=password_var, state="disabled", show="*")
     password_entry.pack(pady=5)
 
     def consult_account():
