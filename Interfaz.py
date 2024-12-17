@@ -162,7 +162,7 @@ def fetch_form():
 
 def update_form():
     def search():
-        cuenta = cuenta_entry.get()
+        cuenta = cuenta_var.get()
         data = fetch_data(cuenta)
         if data:
             usuario_entry.delete(0, tk.END)
@@ -175,7 +175,7 @@ def update_form():
     def modify():
         auth_password = simpledialog.askstring("Authentication", "Enter password to confirm modification:", show='*')
         if auth_password == "cambio":
-            cuenta = cuenta_entry.get()
+            cuenta = cuenta_var.get()
             usuario = usuario_entry.get()
             contraseña = contraseña_entry.get()
             update_data(cuenta, usuario, contraseña)
@@ -187,9 +187,13 @@ def update_form():
     update = tk.Tk()
     update.title("Modify Data")
 
-    tk.Label(update, text="Enter Account:").pack()
-    cuenta_entry = tk.Entry(update)
-    cuenta_entry.pack()
+    tk.Label(update, text="Select Account:").pack()
+    cuenta_var = tk.StringVar(update)
+    cuentas = fetch_all_accounts()
+    if cuentas:
+        cuenta_var.set(cuentas[0])  # Set default value
+    cuenta_menu = tk.OptionMenu(update, cuenta_var, *cuentas)
+    cuenta_menu.pack()
 
     tk.Button(update, text="Search", command=search).pack(pady=10)
 
