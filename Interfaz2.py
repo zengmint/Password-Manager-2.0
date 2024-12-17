@@ -1,6 +1,7 @@
 import sqlite3
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+from PIL import Image, ImageTk
 
 # Database Setup
 def initialize_db():
@@ -52,31 +53,24 @@ def import_csv():
 def main_menu():
     root = tk.Tk()
     root.title("Password Manager 2.0")
-    root.geometry("600x400")
+    root.geometry("350x500")
     root.configure(bg="#f4f4f4")
-
-    # Menu Bar
-    menu_bar = tk.Menu(root)
-
-    # File Menu
-    file_menu = tk.Menu(menu_bar, tearoff=0)
-    file_menu.add_command(label="Import CSV", command=import_csv)
-    file_menu.add_separator()
-    file_menu.add_command(label="Exit", command=root.destroy)
-    menu_bar.add_cascade(label="File", menu=file_menu)
-
-    # Navigation Menu
-    nav_menu = tk.Menu(menu_bar, tearoff=0)
-    nav_menu.add_command(label="Add Data", command=lambda: [root.destroy(), add_data_form()])
-    nav_menu.add_command(label="Consult Data", command=lambda: [root.destroy(), consult_data_form()])
-    nav_menu.add_command(label="Modify Data", command=lambda: [root.destroy(), modify_data_form()])
-    menu_bar.add_cascade(label="Navigate", menu=nav_menu)
-
-    root.config(menu=menu_bar)
 
     # Welcome Label
     welcome_label = tk.Label(root, text="Welcome to Password Manager 2.0", font=("Arial", 16), bg="#f4f4f4")
     welcome_label.pack(pady=20)
+
+    # Button Icons
+    add_icon = ImageTk.PhotoImage(Image.open("add_icon.png").resize((50, 50)))
+    consult_icon = ImageTk.PhotoImage(Image.open("consult_icon.png").resize((50, 50)))
+    modify_icon = ImageTk.PhotoImage(Image.open("modify_icon.png").resize((50, 50)))
+    import_icon = ImageTk.PhotoImage(Image.open("import_icon.png").resize((50, 50)))
+
+    # Buttons
+    tk.Button(root, text="Add Data", image=add_icon, compound="top", command=lambda: [root.destroy(), add_data_form()]).pack(pady=10)
+    tk.Button(root, text="Consult Data", image=consult_icon, compound="top", command=lambda: [root.destroy(), consult_data_form()]).pack(pady=10)
+    tk.Button(root, text="Modify Data", image=modify_icon, compound="top", command=lambda: [root.destroy(), modify_data_form()]).pack(pady=10)
+    tk.Button(root, text="Import CSV", image=import_icon, compound="top", command=import_csv).pack(pady=10)
 
     root.mainloop()
 
@@ -177,7 +171,25 @@ def consult_data_form():
         else:
             messagebox.showerror("Error", "Account not found!")
 
+    def toggle_password():
+        def authenticate():
+            entered_password = password_prompt.get()
+            if entered_password == "ver":
+                password_entry.config(state="normal")
+                password_window.destroy()
+            else:
+                messagebox.showerror("Error", "Incorrect password")
+                password_window.destroy()
+
+        password_window = tk.Toplevel(form)
+        password_window.title("Authentication")
+        tk.Label(password_window, text="Enter Password").pack(pady=5)
+        password_prompt = tk.Entry(password_window, show="*")
+        password_prompt.pack(pady=5)
+        tk.Button(password_window, text="Submit", command=authenticate).pack(pady=5)
+
     tk.Button(form, text="Consult", command=consult_account).pack(pady=10)
+    tk.Button(form, text="Show", command=toggle_password).pack(pady=10)
 
     form.mainloop()
 
@@ -212,6 +224,7 @@ def modify_data_form():
 
     def load_account():
         selected_account = account_combo.get()
+
         if not selected_account:
             messagebox.showwarning("Warning", "Please select an account!")
             return
@@ -231,30 +244,47 @@ def modify_data_form():
             messagebox.showerror("Error", "Account not found!")
 
     def modify_account():
-        selected_account = account_combo.get()
-        new_username = username_var.get()
-        new_password = password_var.get()
+        def authenticate():
+            entered_password = password_prompt.get()
+            if entered_password == "cambio":
+                updated_username = username_var.get()
+                updated_password = password_var.get()
 
-        if not selected_account or not new_username or not new_password:
-            messagebox.showwarning("Warning", "All fields are required!")
-            return
+                if not updated_username or not updated_password:
+                    messagebox.showwarning("Warning", "All fields are required!")
+                    auth_window.destroy()
+                    return
 
-        conn = sqlite3.connect("initdb.db")
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE cuentas SET usuario = ?, contraseña = ? WHERE cuenta = ?",
-            (new_username, new_password, selected_account),
-        )
-        conn.commit()
-        conn.close()
+                selected_account = account_combo.get()
+                conn = sqlite3.connect("initdb.db")
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE cuentas SET usuario = ?, contraseña = ? WHERE cuenta = ?",
+                    (updated_username, updated_password, selected_account),
+                )
+                conn.commit()
+                conn.close()
 
-        messagebox.showinfo("Success", "Account updated successfully!")
-        form.destroy()
-        main_menu()
+                messagebox.showinfo("Success", "Account modified successfully!")
+                auth_window.destroy()
+                form.destroy()
+                main_menu()
+            else:
+                messagebox.showerror("Error", "Incorrect password")
+                auth_window.destroy()
+
+        auth_window = tk.Toplevel(form)
+        auth_window.title("Authentication")
+        tk.Label(auth_window, text="Enter Password").pack(pady=5)
+        password_prompt = tk.Entry(auth_window, show="*")
+        password_prompt.pack(pady=5)
+        tk.Button(auth_window, text="Submit", command=authenticate).pack(pady=5)
 
     tk.Button(form, text="Load", command=load_account).pack(pady=10)
     tk.Button(form, text="Modify", command=modify_account).pack(pady=10)
 
     form.mainloop()
 
-main_menu()
+# Start the program
+if __name__ == "__main__":
+    main_menu()
