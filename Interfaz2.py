@@ -219,7 +219,7 @@ def modify_data_form():
     username_entry.pack(pady=5)
 
     tk.Label(form, text="Password").pack()
-    password_entry = tk.Entry(form, textvariable=password_var)
+    password_entry = tk.Entry(form, textvariable=password_var, show="*")
     password_entry.pack(pady=5)
 
     def load_account():
