@@ -5,50 +5,52 @@ from PIL import Image, ImageTk
 import sqlcipher
 
 def initialize_db():
-    try:
-        conn = sqlcipher.connect("initdb.db", password="your_strong_password")
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS cuentas (
-                cuenta TEXT PRIMARY KEY,
-                usuario TEXT NOT NULL,
-                contrasena TEXT NOT NULL
-            )
-        """)
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"Error initializing database: {e}")
+  """ Crea la tabla 'cuentas' en la base de datos 'initdb.db' si no existe. """
+  try:
+    conn = sqlite3.connect("initdb.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+      CREATE TABLE IF NOT EXISTS cuentas (
+        cuenta TEXT PRIMARY KEY,
+        usuario TEXT NOT NULL,
+        contraseña TEXT NOT NULL
+      )
+    """)
+    conn.commit()
+    conn.close()
+  except Exception as e:
+    print(f"Error initializing database: {e}")
 
-# Functions
 def import_csv():
-    file_path = filedialog.askopenfilename(
-        title="Select CSV File",
-        filetypes=[("CSV Files", "*.csv")]
-    )
-    if not file_path:
-        return
+  """ Importa datos de un archivo CSV a la base de datos. """
+  file_path = filedialog.askopenfilename(
+      title="Select CSV File",
+      filetypes=[("CSV Files", "*.csv")]
+  )
+  if not file_path:
+    return
 
-    try:
-        conn = sqlite3.connect("initdb.db")
-        cursor = conn.cursor()
+  try:
+    conn = sqlite3.connect("initdb.db")
+    cursor = conn.cursor()
 
-        with open(file_path, "r") as file:
-            for line in file:
-                cuenta, usuario, contraseña = line.strip().split(",")
-                try:
-                    cursor.execute(
-                        "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
-                        (cuenta, usuario, contraseña),
-                    )
-                except sqlite3.IntegrityError:
-                    continue
+    with open(file_path, "r") as file:
+      for line in file:
+        cuenta, usuario, contraseña = line.strip().split(",")
+        try:
+          cursor.execute(
+              "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
+              (cuenta, usuario, contraseña),
+          )
+        except sqlite3.IntegrityError:
+          # Ignorar líneas duplicadas
+          pass
 
-        conn.commit()
-        conn.close()
-        messagebox.showinfo("Import Successful", "Data imported successfully!")
-    except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Import Successful", "Data imported successfully!")
+  except Exception as e:
+    messagebox.showerror("Error", f"An error occurred: {e}")
 
 # Main Window
 def main_menu():
