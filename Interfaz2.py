@@ -8,7 +8,7 @@ import aiosqlite
 async def initialize_db():
     try:
         # Replace 'your_strong_password' with your actual key
-        conn = await aiosqlite.connect("initdb.db", uri=True, password="your_strong_password")
+        conn = await aiosqlite.connect("initdb.db", uri=True, password="prueba1234")
         cursor = await conn.cursor()
         await cursor.execute("""
             CREATE TABLE IF NOT EXISTS cuentas (
