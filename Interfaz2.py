@@ -2,29 +2,23 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
-import aiosqlite
+import sqlcipher
 
-# Database Setup
-async def initialize_db():
+def initialize_db():
     try:
-        # Replace 'your_strong_password' with your actual key
-        conn = await aiosqlite.connect("initdb.db", uri=True, password="prueba1234")
-        cursor = await conn.cursor()
-        await cursor.execute("""
+        conn = sqlcipher.connect("initdb.db", password="your_strong_password")
+        cursor = conn.cursor()
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS cuentas (
                 cuenta TEXT PRIMARY KEY,
                 usuario TEXT NOT NULL,
                 contrasena TEXT NOT NULL
             )
         """)
-        await conn.commit()
-        await conn.close()
+        conn.commit()
+        conn.close()
     except Exception as e:
         print(f"Error initializing database: {e}")
-
-# Call the asynchronous function within an async loop
-async def main():
-    await initialize_db()
 
 # Functions
 def import_csv():
@@ -294,5 +288,4 @@ def modify_data_form():
 
 # Start the program
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    initialize_db()
