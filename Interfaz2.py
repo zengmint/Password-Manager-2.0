@@ -80,7 +80,7 @@ def main_menu():
 def add_data_form():
     form = tk.Tk()
     form.title("Add Data")
-    form.geometry("400x300")
+    form.geometry("500x300")
 
     tk.Label(form, text="Add a New Account", font=("Arial", 14)).pack(pady=10)
 
@@ -129,7 +129,7 @@ def add_data_form():
 def consult_data_form():
     form = tk.Tk()
     form.title("Consult Data")
-    form.geometry("400x300")
+    form.geometry("500x300")
 
     tk.Label(form, text="Consult Account Data", font=("Arial", 14)).pack(pady=10)
 
