@@ -2,55 +2,54 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
-import sqlcipher
 
 def initialize_db():
-  """ Crea la tabla 'cuentas' en la base de datos 'initdb.db' si no existe. """
-  try:
-    conn = sqlite3.connect("initdb.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-      CREATE TABLE IF NOT EXISTS cuentas (
-        cuenta TEXT PRIMARY KEY,
-        usuario TEXT NOT NULL,
-        contraseña TEXT NOT NULL
-      )
-    """)
-    conn.commit()
-    conn.close()
-  except Exception as e:
-    print(f"Error initializing database: {e}")
+    """ Crea la tabla 'cuentas' en la base de datos 'initdb.db' si no existe. """
+    try:
+        conn = sqlite3.connect("initdb.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+          CREATE TABLE IF NOT EXISTS cuentas (
+            cuenta TEXT PRIMARY KEY,
+            usuario TEXT NOT NULL,
+            contraseña TEXT NOT NULL
+          )
+        """)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
 
 def import_csv():
-  """ Importa datos de un archivo CSV a la base de datos. """
-  file_path = filedialog.askopenfilename(
-      title="Select CSV File",
-      filetypes=[("CSV Files", "*.csv")]
-  )
-  if not file_path:
-    return
+    """ Importa datos de un archivo CSV a la base de datos. """
+    file_path = filedialog.askopenfilename(
+        title="Select CSV File",
+        filetypes=[("CSV Files", "*.csv")]
+    )
+    if not file_path:
+        return
 
-  try:
-    conn = sqlite3.connect("initdb.db")
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect("initdb.db")
+        cursor = conn.cursor()
 
-    with open(file_path, "r") as file:
-      for line in file:
-        cuenta, usuario, contraseña = line.strip().split(",")
-        try:
-          cursor.execute(
-              "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
-              (cuenta, usuario, contraseña),
-          )
-        except sqlite3.IntegrityError:
-          # Ignorar líneas duplicadas
-          pass
+        with open(file_path, "r") as file:
+            for line in file:
+                cuenta, usuario, contraseña = line.strip().split(",")
+                try:
+                    cursor.execute(
+                        "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
+                        (cuenta, usuario, contraseña),
+                    )
+                except sqlite3.IntegrityError:
+                    # Ignorar líneas duplicadas
+                    pass
 
-    conn.commit()
-    conn.close()
-    messagebox.showinfo("Import Successful", "Data imported successfully!")
-  except Exception as e:
-    messagebox.showerror("Error", f"An error occurred: {e}")
+        conn.commit()
+        conn.close()
+        messagebox.showinfo("Import Successful", "Data imported successfully!")  # Added closing parenthesis
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
 
 # Main Window
 def main_menu():
@@ -122,6 +121,7 @@ def add_data_form():
         conn.close()
 
     tk.Button(form, text="Add", command=add_account).pack(pady=10)
+    tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
 
     form.mainloop()
 
@@ -193,6 +193,7 @@ def consult_data_form():
 
     tk.Button(form, text="Consult", command=consult_account).pack(pady=10)
     tk.Button(form, text="Show", command=toggle_password).pack(pady=10)
+    tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
 
     form.mainloop()
 
@@ -222,12 +223,11 @@ def modify_data_form():
     username_entry.pack(pady=5)
 
     tk.Label(form, text="Password").pack()
-    password_entry = tk.Entry(form, textvariable=password_var, show="*")
+    password_entry = tk.Entry(form, textvariable=password_var)
     password_entry.pack(pady=5)
 
     def load_account():
         selected_account = account_combo.get()
-
         if not selected_account:
             messagebox.showwarning("Warning", "Please select an account!")
             return
@@ -250,12 +250,11 @@ def modify_data_form():
         def authenticate():
             entered_password = password_prompt.get()
             if entered_password == "cambio":
-                updated_username = username_var.get()
-                updated_password = password_var.get()
+                new_username = username_var.get()
+                new_password = password_var.get()
 
-                if not updated_username or not updated_password:
+                if not new_username or not new_password:
                     messagebox.showwarning("Warning", "All fields are required!")
-                    auth_window.destroy()
                     return
 
                 selected_account = account_combo.get()
@@ -263,12 +262,12 @@ def modify_data_form():
                 cursor = conn.cursor()
                 cursor.execute(
                     "UPDATE cuentas SET usuario = ?, contraseña = ? WHERE cuenta = ?",
-                    (updated_username, updated_password, selected_account),
+                    (new_username, new_password, selected_account),
                 )
                 conn.commit()
                 conn.close()
 
-                messagebox.showinfo("Success", "Account modified successfully!")
+                messagebox.showinfo("Success", "Account updated successfully!")
                 auth_window.destroy()
                 form.destroy()
                 main_menu()
@@ -285,9 +284,12 @@ def modify_data_form():
 
     tk.Button(form, text="Load", command=load_account).pack(pady=10)
     tk.Button(form, text="Modify", command=modify_account).pack(pady=10)
+    tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
 
     form.mainloop()
 
-# Start the program
+# Start the application
 if __name__ == "__main__":
     initialize_db()
+    main_menu()
+
