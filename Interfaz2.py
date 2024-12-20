@@ -55,7 +55,7 @@ def import_csv():
 def main_menu():
     root = tk.Tk()
     root.title("Password Manager 2.0")
-    root.geometry("350x500")
+    root.geometry("350x500+500+200")
     root.configure(bg="#f4f4f4")
 
     # Welcome Label
@@ -80,7 +80,7 @@ def main_menu():
 def add_data_form():
     form = tk.Tk()
     form.title("Add Data")
-    form.geometry("350x500")
+    form.geometry("350x500+500+200")
 
     tk.Label(form, text="Add a New Account", font=("Arial", 14)).pack(pady=10)
 
@@ -129,7 +129,7 @@ def add_data_form():
 def consult_data_form():
     form = tk.Tk()
     form.title("Consult Data")
-    form.geometry("350x500")
+    form.geometry("350x500+500+200")
 
     tk.Label(form, text="Consult Account Data", font=("Arial", 14)).pack(pady=10)
 
@@ -201,7 +201,7 @@ def consult_data_form():
 def modify_data_form():
     form = tk.Tk()
     form.title("Modify Data")
-    form.geometry("350x500")
+    form.geometry("350x500+500+200")
 
     tk.Label(form, text="Modify Account Data", font=("Arial", 14)).pack(pady=10)
 
