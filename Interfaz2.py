@@ -69,8 +69,8 @@ def import_csv():
 # Fetch all accounts
 def get_all_accounts():
     with engine.connect() as connection:
-        result = connection.execute(text(SELECT_ALL_ACCOUNTS))
-        return [row["cuenta"] for row in result]
+        result = connection.execute(text(SELECT_ALL_ACCOUNTS)).mappings()
+        return [row['cuenta'] for row in result]
 
 # Fetch account details
 def get_account_details(account):
@@ -273,3 +273,4 @@ def modify_data_form():
 if __name__ == "__main__":
     initialize_db()
     main_menu()
+
