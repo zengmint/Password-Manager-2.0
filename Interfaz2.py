@@ -38,12 +38,12 @@ def import_csv():
 
         with open(file_path, "r") as file:
             for line in file:
-                cuenta, usuario, contraseña = line.strip().split(",")
+                cuenta, usuario, contrasena = line.strip().split(",")
                 try:
                     query = load_query("INSERT_ACCOUNT")
-                    cursor.execute(query, (cuenta, usuario, contraseña))
+                    cursor.execute(query, (cuenta, usuario, contrasena))
                 except sqlite3.IntegrityError:
-                    pass  # Skip duplicate entries
+                    contrasena  # Skip duplicate entries
 
         conn.commit()
         conn.close()
@@ -75,7 +75,7 @@ def get_account_details(account):
     df = pd.read_sql_query(query, conn, params=(account,))
     conn.close()
     if not df.empty:
-        return df.iloc[0]["usuario"], df.iloc[0]["contraseña"]
+        return df.iloc[0]["usuario"], df.iloc[0]["contrasena"]
     return None, None
 
 # Update account details using pandas
