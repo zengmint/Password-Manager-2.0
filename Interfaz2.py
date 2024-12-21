@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 
 # Database connection
 DATABASE_URL = "sqlite:///initdb.db"
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, execution_options={"future_result": True})
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -75,7 +75,7 @@ def get_all_accounts():
 # Fetch account details
 def get_account_details(account):
     with engine.connect() as connection:
-        result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).fetchone()
+        result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).mappings().fetchone()
         if result:
             return result["usuario"], result["contrasena"]
         return None, None
