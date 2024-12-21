@@ -10,30 +10,35 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Function to load SQL queries from an external file
-def load_query(query_name, file_path="queries.sql"):
-    with open(file_path, "r") as f:
-        queries = f.read()
-    query_dict = {}
-    current_key = None
-    current_value = []
-    for line in queries.split("\n"):
-        if " = " in line:
-            if current_key:
-                query_dict[current_key] = " ".join(current_value).strip()
-            current_key, value = line.split(" = ", 1)
-            current_value = [value.strip()]
-        else:
-            current_value.append(line.strip())
-    if current_key:
-        query_dict[current_key] = " ".join(current_value).strip()
-    return query_dict.get(query_name, "")
+# SQL Queries
+CREATE_TABLE = """
+CREATE TABLE IF NOT EXISTS cuentas (
+    cuenta TEXT PRIMARY KEY,
+    usuario TEXT NOT NULL,
+    contrasena TEXT NOT NULL
+);
+"""
+
+INSERT_ACCOUNT = """
+INSERT INTO cuentas (cuenta, usuario, contrasena) VALUES (:cuenta, :usuario, :contrasena);
+"""
+
+SELECT_ALL_ACCOUNTS = """
+SELECT cuenta FROM cuentas;
+"""
+
+SELECT_ACCOUNT_DETAILS = """
+SELECT usuario, contrasena FROM cuentas WHERE cuenta = :account;
+"""
+
+UPDATE_ACCOUNT = """
+UPDATE cuentas SET usuario = :new_username, contrasena = :new_password WHERE cuenta = :account;
+"""
 
 # Initialize Database
 def initialize_db():
     with engine.connect() as connection:
-        query = load_query("CREATE_TABLE")
-        connection.execute(text(query))
+        connection.execute(text(CREATE_TABLE))
 
 # Import data from CSV
 def import_csv():
@@ -46,12 +51,11 @@ def import_csv():
 
     try:
         with engine.connect() as connection:
-            query = load_query("INSERT_ACCOUNT")
             with open(file_path, "r") as file:
                 for line in file:
                     cuenta, usuario, contrasena = line.strip().split(",")
                     try:
-                        connection.execute(text(query), {
+                        connection.execute(text(INSERT_ACCOUNT), {
                             "cuenta": cuenta,
                             "usuario": usuario,
                             "contrasena": contrasena
@@ -65,15 +69,13 @@ def import_csv():
 # Fetch all accounts
 def get_all_accounts():
     with engine.connect() as connection:
-        query = load_query("SELECT_ALL_ACCOUNTS")
-        result = connection.execute(text(query))
+        result = connection.execute(text(SELECT_ALL_ACCOUNTS))
         return [row["cuenta"] for row in result]
 
 # Fetch account details
 def get_account_details(account):
     with engine.connect() as connection:
-        query = load_query("SELECT_ACCOUNT_DETAILS")
-        result = connection.execute(text(query), {"account": account}).fetchone()
+        result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).fetchone()
         if result:
             return result["usuario"], result["contrasena"]
         return None, None
@@ -81,9 +83,8 @@ def get_account_details(account):
 # Update account details
 def update_account(account, new_username, new_password):
     with engine.connect() as connection:
-        query = load_query("UPDATE_ACCOUNT")
         connection.execute(
-            text(query),
+            text(UPDATE_ACCOUNT),
             {
                 "new_username": new_username,
                 "new_password": new_password,
@@ -147,8 +148,7 @@ def add_data_form():
 
         try:
             with engine.connect() as connection:
-                query = load_query("INSERT_ACCOUNT")
-                connection.execute(text(query), {
+                connection.execute(text(INSERT_ACCOUNT), {
                     "cuenta": account,
                     "usuario": username,
                     "contrasena": password
