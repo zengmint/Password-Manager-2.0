@@ -1,27 +1,30 @@
 import sqlite3
+import pandas as pd
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 
-def initialize_db():
-    """ Crea la tabla 'cuentas' en la base de datos 'initdb.db' si no existe. """
-    try:
-        conn = sqlite3.connect("initdb.db")
-        cursor = conn.cursor()
-        cursor.execute("""
-          CREATE TABLE IF NOT EXISTS cuentas (
-            cuenta TEXT PRIMARY KEY,
-            usuario TEXT NOT NULL,
-            contraseña TEXT NOT NULL
-          )
-        """)
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"Error initializing database: {e}")
+# Function to load SQL queries from an external file
+def load_query(query_name, file_path="queries.sql"):
+    with open(file_path, "r") as f:
+        queries = f.read()
+    query_dict = {}
+    current_key = None
+    current_value = []
+    for line in queries.split("\n"):
+        if " = " in line:
+            if current_key:
+                query_dict[current_key] = " ".join(current_value).strip()
+            current_key, value = line.split(" = ", 1)
+            current_value = [value.strip()]
+        else:
+            current_value.append(line.strip())
+    if current_key:
+        query_dict[current_key] = " ".join(current_value).strip()
+    return query_dict.get(query_name, "")
 
 def import_csv():
-    """ Importa datos de un archivo CSV a la base de datos. """
+    """Import data from a CSV file into the database."""
     file_path = filedialog.askopenfilename(
         title="Select CSV File",
         filetypes=[("CSV Files", "*.csv")]
@@ -37,25 +40,58 @@ def import_csv():
             for line in file:
                 cuenta, usuario, contraseña = line.strip().split(",")
                 try:
-                    cursor.execute(
-                        "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
-                        (cuenta, usuario, contraseña),
-                    )
+                    query = load_query("INSERT_ACCOUNT")
+                    cursor.execute(query, (cuenta, usuario, contraseña))
                 except sqlite3.IntegrityError:
-                    # Ignorar líneas duplicadas
-                    pass
+                    pass  # Skip duplicate entries
 
         conn.commit()
         conn.close()
-        messagebox.showinfo("Import Successful", "Data imported successfully!")  # Added closing parenthesis
+        messagebox.showinfo("Import Successful", "Data imported successfully!")
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
+
+# Initialize Database
+def initialize_db():
+    conn = sqlite3.connect("initdb.db")
+    cursor = conn.cursor()
+    create_table_query = load_query("CREATE_TABLE")
+    cursor.execute(create_table_query)
+    conn.commit()
+    conn.close()
+
+# Fetch all accounts using pandas
+def get_all_accounts():
+    conn = sqlite3.connect("initdb.db")
+    query = load_query("SELECT_ALL_ACCOUNTS")
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df["cuenta"].tolist()
+
+# Fetch account details using pandas
+def get_account_details(account):
+    conn = sqlite3.connect("initdb.db")
+    query = load_query("SELECT_ACCOUNT_DETAILS")
+    df = pd.read_sql_query(query, conn, params=(account,))
+    conn.close()
+    if not df.empty:
+        return df.iloc[0]["usuario"], df.iloc[0]["contraseña"]
+    return None, None
+
+# Update account details using pandas
+def update_account(account, new_username, new_password):
+    conn = sqlite3.connect("initdb.db")
+    cursor = conn.cursor()
+    query = load_query("UPDATE_ACCOUNT")
+    cursor.execute(query, (new_username, new_password, account))
+    conn.commit()
+    conn.close()
 
 # Main Window
 def main_menu():
     root = tk.Tk()
     root.title("Password Manager 2.0")
-    root.geometry("350x500+500+200")
+    root.geometry("350x500+500+200")  # Fixed position
     root.configure(bg="#f4f4f4")
 
     # Welcome Label
@@ -80,7 +116,7 @@ def main_menu():
 def add_data_form():
     form = tk.Tk()
     form.title("Add Data")
-    form.geometry("350x500+500+200")
+    form.geometry("350x500+500+200")  # Fixed position
 
     tk.Label(form, text="Add a New Account", font=("Arial", 14)).pack(pady=10)
 
@@ -108,10 +144,8 @@ def add_data_form():
         conn = sqlite3.connect("initdb.db")
         cursor = conn.cursor()
         try:
-            cursor.execute(
-                "INSERT INTO cuentas (cuenta, usuario, contraseña) VALUES (?, ?, ?)",
-                (account, username, password),
-            )
+            query = load_query("INSERT_ACCOUNT")
+            cursor.execute(query, (account, username, password))
             conn.commit()
             messagebox.showinfo("Success", "Account added successfully!")
             form.destroy()
@@ -129,15 +163,11 @@ def add_data_form():
 def consult_data_form():
     form = tk.Tk()
     form.title("Consult Data")
-    form.geometry("350x500+500+200")
+    form.geometry("350x500+500+200")  # Fixed position
 
     tk.Label(form, text="Consult Account Data", font=("Arial", 14)).pack(pady=10)
 
-    conn = sqlite3.connect("initdb.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT cuenta FROM cuentas")
-    accounts = [row[0] for row in cursor.fetchall()]
-    conn.close()
+    accounts = get_all_accounts()
 
     tk.Label(form, text="Select Account").pack()
     account_combo = ttk.Combobox(form, values=accounts, state="readonly")
@@ -160,17 +190,11 @@ def consult_data_form():
             messagebox.showwarning("Warning", "Please select an account!")
             return
 
-        conn = sqlite3.connect("initdb.db")
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT usuario, contraseña FROM cuentas WHERE cuenta = ?", (selected_account,)
-        )
-        result = cursor.fetchone()
-        conn.close()
+        username, password = get_account_details(selected_account)
 
-        if result:
-            username_var.set(result[0])
-            password_var.set(result[1])
+        if username and password:
+            username_var.set(username)
+            password_var.set(password)
         else:
             messagebox.showerror("Error", "Account not found!")
 
@@ -201,15 +225,11 @@ def consult_data_form():
 def modify_data_form():
     form = tk.Tk()
     form.title("Modify Data")
-    form.geometry("350x500+500+200")
+    form.geometry("350x500+500+200")  # Fixed position
 
     tk.Label(form, text="Modify Account Data", font=("Arial", 14)).pack(pady=10)
 
-    conn = sqlite3.connect("initdb.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT cuenta FROM cuentas")
-    accounts = [row[0] for row in cursor.fetchall()]
-    conn.close()
+    accounts = get_all_accounts()
 
     tk.Label(form, text="Select Account").pack()
     account_combo = ttk.Combobox(form, values=accounts, state="readonly")
@@ -232,17 +252,11 @@ def modify_data_form():
             messagebox.showwarning("Warning", "Please select an account!")
             return
 
-        conn = sqlite3.connect("initdb.db")
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT usuario, contraseña FROM cuentas WHERE cuenta = ?", (selected_account,)
-        )
-        result = cursor.fetchone()
-        conn.close()
+        username, password = get_account_details(selected_account)
 
-        if result:
-            username_var.set(result[0])
-            password_var.set(result[1])
+        if username and password:
+            username_var.set(username)
+            password_var.set(password)
         else:
             messagebox.showerror("Error", "Account not found!")
 
@@ -258,14 +272,7 @@ def modify_data_form():
                     return
 
                 selected_account = account_combo.get()
-                conn = sqlite3.connect("initdb.db")
-                cursor = conn.cursor()
-                cursor.execute(
-                    "UPDATE cuentas SET usuario = ?, contraseña = ? WHERE cuenta = ?",
-                    (new_username, new_password, selected_account),
-                )
-                conn.commit()
-                conn.close()
+                update_account(selected_account, new_username, new_password)
 
                 messagebox.showinfo("Success", "Account updated successfully!")
                 auth_window.destroy()
@@ -288,7 +295,6 @@ def modify_data_form():
 
     form.mainloop()
 
-# Start the application
 if __name__ == "__main__":
     initialize_db()
     main_menu()
