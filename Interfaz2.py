@@ -8,7 +8,6 @@ from PIL import Image, ImageTk
 DATABASE_URL = "sqlite:///initdb.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, execution_options={"future_result": True})
 Session = sessionmaker(bind=engine)
-session = Session()
 
 # SQL Queries
 CREATE_TABLE = """
@@ -69,13 +68,13 @@ def import_csv():
 # Fetch all accounts
 def get_all_accounts():
     with engine.connect() as connection:
-        result = connection.execute(text(SELECT_ALL_ACCOUNTS)).mappings()
-        return [row['cuenta'] for row in result]
+        result = connection.execute(text(SELECT_ALL_ACCOUNTS)).fetchall()
+        return [row[0] for row in result]
 
 # Fetch account details
 def get_account_details(account):
     with engine.connect() as connection:
-        result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).mappings().fetchone()
+        result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).fetchone()
         if result:
             return result["usuario"], result["contrasena"]
         return None, None
@@ -91,6 +90,7 @@ def update_account(account, new_username, new_password):
                 "account": account
             }
         )
+        connection.commit()  # Explicit commit after update
 
 # Main Window
 def main_menu():
@@ -177,6 +177,7 @@ def modify_data_form():
                 except Exception as e:
                     messagebox.showerror("Error", f"An error occurred: {e}")
                 password_window.destroy()
+
             else:
                 messagebox.showerror("Error", "Incorrect password")
                 password_window.destroy()
@@ -227,6 +228,7 @@ def consult_data_form():
             messagebox.showwarning("Warning", "Please select an account!")
             return
 
+        # Fetch updated account details
         username, password = get_account_details(selected_account)
 
         if username and password:
@@ -263,4 +265,3 @@ def consult_data_form():
 if __name__ == "__main__":
     initialize_db()
     main_menu()
-
