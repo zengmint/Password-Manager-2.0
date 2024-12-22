@@ -173,7 +173,7 @@ def modify_data_form():
                     update_account(selected_account, new_username, new_password)
                     messagebox.showinfo("Success", "Account updated successfully!")
                     form.destroy()
-                    main_menu()
+                    main_menu()  # Reload main menu
                 except Exception as e:
                     messagebox.showerror("Error", f"An error occurred: {e}")
                 password_window.destroy()
@@ -263,5 +263,4 @@ def consult_data_form():
 if __name__ == "__main__":
     initialize_db()
     main_menu()
-
 
