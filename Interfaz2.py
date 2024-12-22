@@ -76,7 +76,8 @@ def get_account_details(account):
     with engine.connect() as connection:
         result = connection.execute(text(SELECT_ACCOUNT_DETAILS), {"account": account}).fetchone()
         if result:
-            return result["usuario"], result["contrasena"]
+            # Accessing tuple results by index
+            return result[0], result[1]  # usuario, contrasena
         return None, None
 
 # Update account details
