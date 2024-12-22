@@ -117,6 +117,85 @@ def main_menu():
 
     root.mainloop()
 
+# Modify Data Form
+def modify_data_form():
+    form = tk.Tk()
+    form.title("Modify Data")
+    form.geometry("350x500+500+200")
+
+    tk.Label(form, text="Modify Account Data", font=("Arial", 14)).pack(pady=10)
+
+    accounts = get_all_accounts()
+
+    tk.Label(form, text="Select Account").pack()
+    account_combo = ttk.Combobox(form, values=accounts, state="readonly")
+    account_combo.pack(pady=5)
+
+    username_var = tk.StringVar()
+    password_var = tk.StringVar()
+
+    tk.Label(form, text="Username").pack()
+    username_entry = tk.Entry(form, textvariable=username_var)
+    username_entry.pack(pady=5)
+
+    tk.Label(form, text="Password").pack()
+    password_entry = tk.Entry(form, textvariable=password_var, show="*")
+    password_entry.pack(pady=5)
+
+    def load_account():
+        selected_account = account_combo.get()
+        if not selected_account:
+            messagebox.showwarning("Warning", "Please select an account!")
+            return
+
+        username, password = get_account_details(selected_account)
+
+        if username and password:
+            username_var.set(username)
+            password_var.set(password)
+        else:
+            messagebox.showerror("Error", "Account not found!")
+
+    def modify_account():
+        # Password verification
+        def verify_password():
+            entered_password = password_prompt.get()
+            if entered_password == "cambio":  # Check if password is correct
+                new_username = username_var.get()
+                new_password = password_var.get()
+
+                if not new_username or not new_password:
+                    messagebox.showwarning("Warning", "All fields are required!")
+                    return
+
+                selected_account = account_combo.get()
+                try:
+                    update_account(selected_account, new_username, new_password)
+                    messagebox.showinfo("Success", "Account updated successfully!")
+                    form.destroy()
+                    main_menu()
+                except Exception as e:
+                    messagebox.showerror("Error", f"An error occurred: {e}")
+                password_window.destroy()
+            else:
+                messagebox.showerror("Error", "Incorrect password")
+                password_window.destroy()
+
+        password_window = tk.Toplevel(form)
+        password_window.title("Enter Password")
+        password_window.geometry("300x150")
+
+        tk.Label(password_window, text="Enter the password to modify account").pack(pady=10)
+        password_prompt = tk.Entry(password_window, show="*")
+        password_prompt.pack(pady=5)
+        tk.Button(password_window, text="Authenticate", command=verify_password).pack(pady=10)
+
+    tk.Button(form, text="Load Account", command=load_account).pack(pady=10)
+    tk.Button(form, text="Modify", command=modify_account).pack(pady=10)
+    tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
+
+    form.mainloop()
+
 # Consult Data Form
 def consult_data_form():
     form = tk.Tk()
@@ -167,61 +246,16 @@ def consult_data_form():
                 password_window.destroy()
 
         password_window = tk.Toplevel(form)
-        password_window.title("Authentication")
-        tk.Label(password_window, text="Enter Password to View").pack(pady=5)
+        password_window.title("Enter Password")
+        password_window.geometry("300x150")
+
+        tk.Label(password_window, text="Enter the password to view account").pack(pady=10)
         password_prompt = tk.Entry(password_window, show="*")
         password_prompt.pack(pady=5)
-        tk.Button(password_window, text="Submit", command=authenticate).pack(pady=5)
+        tk.Button(password_window, text="Authenticate", command=authenticate).pack(pady=10)
 
     tk.Button(form, text="Consult", command=consult_account).pack(pady=10)
-    tk.Button(form, text="Show", command=toggle_password).pack(pady=10)
-    tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
-
-    form.mainloop()
-
-# Add Data Form
-def add_data_form():
-    form = tk.Tk()
-    form.title("Add Data")
-    form.geometry("350x500+500+200")  # Fixed position
-
-    tk.Label(form, text="Add a New Account", font=("Arial", 14)).pack(pady=10)
-
-    tk.Label(form, text="Account").pack()
-    account_entry = tk.Entry(form)
-    account_entry.pack(pady=5)
-
-    tk.Label(form, text="Username").pack()
-    username_entry = tk.Entry(form)
-    username_entry.pack(pady=5)
-
-    tk.Label(form, text="Password").pack()
-    password_entry = tk.Entry(form, show="*")
-    password_entry.pack(pady=5)
-
-    def add_account():
-        account = account_entry.get()
-        username = username_entry.get()
-        password = password_entry.get()
-
-        if not account or not username or not password:
-            messagebox.showwarning("Warning", "All fields are required!")
-            return
-
-        try:
-            with engine.connect() as connection:
-                connection.execute(text(INSERT_ACCOUNT), {
-                    "cuenta": account,
-                    "usuario": username,
-                    "contrasena": password
-                })
-            messagebox.showinfo("Success", "Account added successfully!")
-            form.destroy()
-            main_menu()
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
-
-    tk.Button(form, text="Add", command=add_account).pack(pady=10)
+    tk.Button(form, text="View Password", command=toggle_password).pack(pady=10)
     tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
 
     form.mainloop()
