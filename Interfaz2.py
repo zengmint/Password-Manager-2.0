@@ -139,16 +139,16 @@ def add_data_form():
     password_entry.pack(pady=5)
 
     def add_account():
-        account = account_entry.get()
-        username = username_entry.get()
-        password = password_entry.get()
+        account = account_entry.get().strip()
+        username = username_entry.get().strip()
+        password = password_entry.get().strip()
 
         if not account or not username or not password:
             messagebox.showwarning("Warning", "All fields are required!")
             return
 
         try:
-            with engine.connect() as connection:
+            with engine.begin() as connection:  # Use begin() to ensure transactions
                 connection.execute(text(INSERT_ACCOUNT), {
                     "cuenta": account,
                     "usuario": username,
@@ -164,7 +164,7 @@ def add_data_form():
     tk.Button(form, text="Back", command=lambda: [form.destroy(), main_menu()]).pack(pady=10)
 
     form.mainloop()
-
+    
 # Consult Data Form
 def consult_data_form():
     form = tk.Tk()
